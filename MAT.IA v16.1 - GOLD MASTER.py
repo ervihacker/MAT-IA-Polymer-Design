@@ -98,35 +98,74 @@ class MatIA_FinalArchitect:
         print("═"*75 + "\n")
 
     def edit_database(self):
-        print("\n--- EDITOR DE BANCO DE DADOS ---")
-        print("1. Adicionar Polímero")
-        print("2. Adicionar Carga")
-        print("3. Adicionar Compatibilizante")
-        print("4. Voltar")
-        op = input("Opção >> ")
-        try:
-            if op == '1':
-                pid = input("Sigla ID (Ex: PLA): ").upper()
-                name = input("Nome Completo: ")
-                dd = float(input("dD: ").replace(',', '.'))
-                dp = float(input("dP: ").replace(',', '.'))
-                dh = float(input("dH: ").replace(',', '.'))
-                mod = float(input("Módulo (GPa): ").replace(',', '.'))
-                tg = float(input("Tg (°C): ").replace(',', '.'))
-                self.data['polymers'][pid] = {"name": name, "hsp": [dd, dp, dh], "mod": mod, "tg": tg, "density": 1.0}
-            elif op == '2':
-                fid = input("Sigla ID: ").upper()
-                name = input("Nome: ")
-                fac = float(input("Fator: ").replace(',', '.'))
-                self.data['fillers'][fid] = {"name": name, "factor": fac}
-            elif op == '3':
-                cid = input("Sigla ID: ").upper()
-                name = input("Nome: ")
-                rec = float(input("Recuperação (0-1): ").replace(',', '.'))
-                self.data['compatibilizers'][cid] = {"name": name, "hsp": [0,0,0], "recovery": rec}
-            self.save_db(self.data)
-            print("[OK] Salvo!")
-        except: print("[!] Erro de Digitação.")
+        while True:
+            # Limpa a tela (opcional, se tiver a função)
+            print("\n--- EDITOR DE BANCO DE DADOS (v16.2) ---")
+            print("1. Adicionar Polímero")
+            print("2. Adicionar Carga")
+            print("3. Adicionar Compatibilizante")
+            print("4. REMOVER Material")  # NOVA OPÇÃO
+            print("5. Voltar")
+            
+            op = input("Opção >> ")
+            
+            if op == '5':
+                break
+                
+            # --- ROTINA DELETAR ---
+            if op == '4':
+                target = input("Digite a Sigla ID para apagar: ").strip().upper()
+                found = False
+                # Procura em todas as categorias
+                for category in ['polymers', 'fillers', 'compatibilizers']:
+                    if target in self.data[category]:
+                        del self.data[category][target]
+                        self.save_db(self.data)
+                        print(f"[OK] '{target}' foi removido de {category}.")
+                        found = True
+                        break
+                if not found:
+                    print(f"[Erro] ID '{target}' não encontrado em nenhuma lista.")
+                continue
+
+            # --- ROTINAS DE ADICIONAR ---
+            try:
+                # 1. POLIMERO
+                if op == '1':
+                    pid = input("Sigla ID (Ex: PLA): ").strip().upper()
+                    # Proteção Duplicata
+                    if pid in self.data['polymers']:
+                        print(f"[!] O ID '{pid}' já existe! Use a opção de remover antes se quiser alterar.")
+                        continue
+                        
+                    name = input("Nome Completo: ")
+                    dd = float(input("dD: ").replace(',', '.'))
+                    dp = float(input("dP: ").replace(',', '.'))
+                    dh = float(input("dH: ").replace(',', '.'))
+                    mod = float(input("Módulo (GPa): ").replace(',', '.'))
+                    tg = float(input("Tg (°C): ").replace(',', '.'))
+                    
+                    self.data['polymers'][pid] = {
+                        "name": name, "hsp": [dd, dp, dh], 
+                        "mod": mod, "tg": tg, "density": 1.0
+                    }
+                    print(f"[OK] Polímero {pid} salvo!")
+
+                # 2. CARGA
+                elif op == '2':
+                    fid = input("Sigla ID (Ex: GF): ").strip().upper()
+                    if fid in self.data['fillers']:
+                        print(f"[!] O ID '{fid}' já existe!")
+                        continue
+                        
+                    name = input("Nome: ")
+                    fac = float(input("Fator de Reforço: ").replace(',', '.'))
+                    self.data['fillers'][fid] = {"name": name, "factor": fac}
+                    print(f"[OK] Carga {fid} salva!")
+
+                # 3. COMPATIBILIZANTE
+                elif op == '3':
+                    cid = input
 
     def calculate_physics(self, mixture_str):
         components = []
@@ -298,3 +337,4 @@ class MatIA_FinalArchitect:
 
 if __name__ == "__main__":
     MatIA_FinalArchitect().run()
+
